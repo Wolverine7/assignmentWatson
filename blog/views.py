@@ -8,17 +8,19 @@ from watson_developer_cloud import ToneAnalyzerV3
 from watson_developer_cloud.tone_analyzer_v3 import ToneInput
 from watson_developer_cloud import LanguageTranslatorV3
 
-language_translator = LanguageTranslatorV3(
-    version='2018-05-31',
-    iam_apikey = 'HlK2hXGChPDwRQ9J32GYzPduHQqhNTDBsvsYg4Yvtop0')
 
-service = ToneAnalyzerV3(
-    version='2017-09-26',
-    iam_apikey = 'DRPM3RA0gH0UcfLkZUBwpAo91JwbgEYDgiXtjV3mZeFS')
 
 
 def post_list(request):
     posts = Post.objects.filter(published_date__lte=timezone.now()).order_by('published_date')
+
+    language_translator = LanguageTranslatorV3(
+        version='2018-05-31',
+        iam_apikey='HlK2hXGChPDwRQ9J32GYzPduHQqhNTDBsvsYg4Yvtop0')
+
+    service = ToneAnalyzerV3(
+        version='2017-09-26',
+        iam_apikey='DRPM3RA0gH0UcfLkZUBwpAo91JwbgEYDgiXtjV3mZeFS')
 
     for post in posts:
         posting = post.text
@@ -37,14 +39,17 @@ def post_list(request):
         tone2 = str(tone)
         json_data = json.loads(tone2)
         # print(json_data)
-        post.json_score1 = json_data['result']['document_tone']['tones'][0]['score']
-        post.json_name1 = json_data['result']['document_tone']['tones'][0]['tone_name']
+        try:
+            post.json_score1 = json_data['result']['document_tone']['tones'][0]['score']
+            post.json_name1 = json_data['result']['document_tone']['tones'][0]['tone_name']
+            post.json_score2 = json_data['result']['document_tone']['tones'][1]['score']
+            post.json_name2 = json_data['result']['document_tone']['tones'][1]['tone_name']
 
-
-
+        except:
+            pass
 
         post.tone3 = (tone2[1:500])
-        print(post.tone3)
+        # print(post.tone3)
 
     return render(request, 'blog/post_list.html', {'posts': posts})
 
